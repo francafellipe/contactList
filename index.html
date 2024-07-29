@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Contatos</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-control {
+            border-radius: 0.25rem;
+        }
+        .btn-custom {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 0.875rem;
+        }
+        .btn-edit, .btn-delete {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">Gerenciamento de Contatos</h1>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Adicionar Novo Contato</h5>
+                <form id="form-contato">
+                    <div class="form-group">
+                        <label for="nome">Nome</label>
+                        <input type="text" class="form-control" id="nome" placeholder="Digite o nome" required>
+                        <div class="error" id="nome-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefone">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" placeholder="(xx) 0 0000-0000" required>
+                        <div class="error" id="telefone-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" class="form-control" id="email" placeholder="Digite o e-mail" required>
+                        <div class="error" id="email-error"></div>
+                    </div>
+                    <button type="submit" class="btn btn-custom">Adicionar Contato</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Lista de Contatos</h5>
+                <ul id="lista-contatos" class="list-group">
+                    <!-- Contatos serão adicionados aqui -->
+                </ul>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="search">Buscar Contato</label>
+            <input type="text" class="form-control" id="search" placeholder="Buscar por nome, telefone ou e-mail">
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('form-contato').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const nome = document.getElementById('nome').value.trim();
+            const telefone = document.getElementById('telefone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            const nomeError = document.getElementById('nome-error');
+            const telefoneError = document.getElementById('telefone-error');
+            const emailError = document.getElementById('email-error');
+
+            let valid = true;
+
+            nomeError.textContent = '';
+            telefoneError.textContent = '';
+            emailError.textContent = '';
+
+            if (nome === '') {
+                nomeError.textContent = 'O nome é obrigatório.';
+                valid = false;
+            }
+
+            const telefoneRegex = /^\(\d{2}\) \d \d{4}-\d{4}$/;
+            if (!telefoneRegex.test(telefone)) {
+                telefoneError.textContent = 'O telefone deve estar no formato (xx) 0 0000-0000.';
+                valid = false;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                emailError.textContent = 'O e-mail deve conter um "@" e um domínio válido.';
+                valid = false;
+            }
+
+            if (valid) {
+                const listaContatos = document.getElementById('lista-contatos');
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    ${nome} - ${telefone} - ${email}
+                    <span>
+                        <button class="btn btn-sm btn-warning btn-edit">Editar</button>
+                        <button class="btn btn-sm btn-danger btn-delete">Excluir</button>
+                    </span>
+                `;
+                listaContatos.appendChild(li);
+
+                document.getElementById('form-contato').reset();
+            }
+        });
+
+        function formatarTelefone(event) {
+            let telefone = event.target.value.replace(/\D/g, '');
+            if (telefone.length > 11) telefone = telefone.slice(0, 11);
+
+            if (telefone.length > 6) {
+                telefone = telefone.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, '($1) $2 $3-$4');
+            } else if (telefone.length > 2) {
+                telefone = telefone.replace(/(\d{2})(\d{1})/, '($1) $2');
+            } else if (telefone.length > 0) {
+                telefone = telefone.replace(/(\d{2})/, '($1)');
+            }
+
+            event.target.value = telefone;
+        }
+
+        document.getElementById('telefone').addEventListener('input', formatarTelefone);
+
+        document.getElementById('lista-contatos').addEventListener('click', function(event) {
+            if (event.target.classList.contains('btn-edit')) {
+                const li = event.target.closest('li');
+                const nome = li.childNodes[0].textContent.split(' - ')[0].trim();
+                const telefone = li.childNodes[0].textContent.split(' - ')[1].trim();
+                const email = li.childNodes[0].textContent.split(' - ')[2].trim();
+
+                document.getElementById('nome').value = nome;
+                document.getElementById('telefone').value = telefone;
+                document.getElementById('email').value = email;
+
+                li.remove();
+            }
+
+            if (event.target.classList.contains('btn-delete')) {
+                event.target.closest('li').remove();
+            }
+        });
+        document.getElementById('search').addEventListener('input', function() {
+        const searchValue = this.value.toLowerCase()
+        const contatos = document.querySelectorAll('#lista-contatos .list-group-item')
+        contatos.forEach(contato => {
+            const text = contato.textContent.toLowerCase()
+            if (text.includes(searchValue)) {
+                contato.style.display = ''
+            } else {
+                contato.style.display = 'none'
+            }
+        })
+    })
+    </script>
+</body>
+</html>
